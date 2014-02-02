@@ -136,7 +136,132 @@ int yylex ( void );                 /* Defined in the generated scanner */
 
 %%
 
-program : ;
+program : function_list { root = CN(program_n, 1, $1); }
+        | class_list function_list { root = CN(program_n, 2, $1, $2); }
+        ;
+function : type FUNC variable '(' parameter_list ')' START statement_list END {
+         $$ = CN(function_n, 4, $1, $3, $5, $8);
+};
+function_list : function_list function {
+              $$ = CN(function_list_n, 2, $1, $2);
+              } 
+              | { $$ = NULL; }
+              ;
+statement_list : statement { $$ = CN(statement_list_n, 1, $1); }
+               | statement_list statement {
+               $$ = CN(statement_list_n, 2, $1, $2);
+};
+variable_list : declaration_statement { $$ = CN(variable_list_n, 1, $1); }
+              | variable_list ',' declaration_statement { $$ = CN(variable_list_n, 2, $1, $3); }
+              ;
+expression_list : expression { $$ = CN(expression_list_n, 1, $1); }
+                | expression_list ',' expression { $$ = CN(expression_list_n, 2, $1, $3); }
+                ;
+parameter_list : variable_list { $$ = CN(parameter_list_n, 1, $1); }
+               | /* empty */ { $$ = NULL; }
+               ;
+argument_list : expression_list { $$ = CN(argument_list_n, 1, $1); }
+              | /* empty */ { $$ = NULL; }
+              ;
+class_list : class { $$ = CN(class_list_n, 1, $1); }
+           | class_list class { $$ = CN(class_list_n, 2, $1, $2); }
+           ;
+class : _CLASS_ variable HAS declaration_list WITH function_list END {
+      $$ = CN(class_n, 3, $2, $4, $6);
+      };
+declaration_list : declaration_list declaration_statement ';' {
+                 $$ = CN(declaration_list_n, 2, $1, $2);
+                 }
+                 | { $$ = NULL; }
+                 ;
+statement : declaration_statement ';' { $$ = CN(statement_n, 1, $1); }
+          | assignment_statement ';' { $$ = CN(statement_n, 1, $1); }
+          | if_statement { $$ = CN(statement_n, 1, $1); }
+          | while_statement { $$ = CN(statement_n, 1, $1); }
+          | print_statement ';' { $$ = CN(statement_n, 1, $1); }
+          | return_statement ';' { $$ = CN(statement_n, 1, $1); }
+          | call ';' { $$ = CN(statement_n, 1, $1); }
+          ;
+declaration_statement : type variable {
+                      $$ = CN(declaration_statement_n, 2, $1, $2);
+                      };
+assignment_statement : lvalue ASSIGN expression {
+                     $$ = CN(assignment_statement_n, 2, $1, $3);
+                     };
+if_statement : IF expression THEN statement_list END {
+             $$ = CN(if_statement_n, 2, $2, $4);
+             }| IF expression THEN statement_list ELSE statement_list END {
+             $$ = CN(if_statement_n, 3, $2, $4, $6);
+             };
+while_statement : WHILE expression DO statement_list END {
+                $$ = CN(while_statement_n, 2, $2, $4);
+                };
+return_statement : RETURN expression {
+                 $$ = CN(return_statement_n, 1, $2);
+                 };
+print_statement : PRINT expression_list {
+                $$ = CN(print_statement_n, 1, $2);
+                };
+expression : constant { $$ = CNE(expression_n, constant_e, 1, $1); }
+           | expression '+' expression { $$ = CNE(expression_n, add_e, 2, $1, $3); }
+           | expression '-' expression { $$ = CNE(expression_n, sub_e, 2, $1, $3); }
+           | expression '*' expression { $$ = CNE(expression_n, mul_e, 2, $1, $3); }
+           | expression '/' expression { $$ = CNE(expression_n, div_e, 2, $1, $3); }
+           | expression '>' expression { $$ = CNE(expression_n, greater_e, 2, $1, $3); }
+           | expression '<' expression { $$ = CNE(expression_n, less_e, 2, $1, $3); }
+           | expression EQUAL expression { $$ = CNE(expression_n, equal_e, 2, $1, $3); }
+           | expression NEQUAL expression { $$ = CNE(expression_n, nequal_e, 2, $1, $3); }
+           | expression GEQUAL expression { $$ = CNE(expression_n, gequal_e, 2, $1, $3); }
+           | expression LEQUAL expression { $$ = CNE(expression_n, lequal_e, 2, $1, $3); }
+           | expression AND expression { $$ = CNE(expression_n, and_e, 2, $1, $3); }
+           | expression OR expression { $$ = CNE(expression_n, or_e, 2, $1, $3); }
+           | '-' expression %prec UMINUS { $$ = CNE(expression_n, uminus_e, 1, $2); }
+           | '!' expression %prec UMINUS { $$ = CNE(expression_n, not_e, 1, $2); }
+           | '(' expression ')' { $$ = CNE(expression_n, default_e, 1, $2); }
+           | call { $$ = CN(expression_n, 1, $1); }
+           | THIS { $$ = CNE(expression_n, this_e, 0); }
+           | lvalue { $$ = CN(expression_n, 1, $1); }
+           | NEW type { $$ = CNE(expression_n, new_e, 1, $2); }
+           ;
+call : variable '(' argument_list ')' {
+     $$ = CNE(expression_n, func_call_e, 2, $1, $3);
+     }| expression '.' variable '(' argument_list')' {
+     $$ = CNE(expression_n, meth_call_e, 3, $1, $3, $5);
+     };
+lvalue : variable { $$ = CNE(expression_n, variable_e, 1, $1); }
+       | expression '.' variable {
+       $$ = CNE(expression_n, class_field_e, 2, $1, $3);
+       };
+constant : TRUE_CONST {
+         $$ = CN(constant_n, 0);
+         $$->data_type.base_type = BOOL_TYPE;
+         $$->bool_const = true;
+         }
+         | FALSE_CONST {
+         $$ = CN(constant_n, 0);
+         $$->data_type.base_type = BOOL_TYPE;
+         $$->bool_const = false;
+         }
+         | INT_CONST {
+         $$ = CN(constant_n, 0);
+         SetInteger($$, yytext);
+         }
+         | FLOAT_CONST {
+         $$ = CN(constant_n, 0);
+         SetFloat($$, yytext);
+         }
+         | STRING_CONST {
+         $$ = CN(constant_n, 0);
+         SetString($$, yytext);
+         };
+type : INT { $$ = CNT(type_n, INT_TYPE, 0); }
+     | FLOAT { $$ = CNT(type_n, FLOAT_TYPE, 0); }
+     | BOOL { $$ = CNT(type_n, BOOL_TYPE, 0); }
+     | VOID { $$ = CNT(type_n, VOID_TYPE, 0); }
+     | variable { $$ = CNT(type_n, CLASS_TYPE, 1, $1); }
+     ;
+variable : IDENTIFIER { $$ = CNL(variable_n, STRDUP(yytext), 0); }
+         ;
 
 %% 
 
