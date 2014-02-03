@@ -176,7 +176,7 @@ void destroy_subtree ( FILE *output, node_t *discard )
 {
     if (discard != NULL) {
         for (int i=0; i < discard->n_children; i++) {
-            node_finalize(discard->children[i]);
+            destroy_subtree(output, discard->children[i]);
         }
         node_finalize(discard);
     }
