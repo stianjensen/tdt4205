@@ -1,0 +1,20 @@
+1,17c1
+<  PROGRAM()()
+<  FUNCTION_LIST()()
+<   (nil)
+<   FUNCTION()()
+<    TYPE(FLOAT)()
+<    VARIABLE()("nop42V2")()
+<    PARAMETER_LIST()()
+<     VARIABLE_LIST()()
+<      DECLARATION_STATEMENT()()
+<       TYPE(FLOAT)()
+<       VARIABLE()("variable")()
+<    STATEMENT_LIST()()
+<     STATEMENT()()
+<      RETURN_STATEMENT()()
+<       EXPRESSION()()
+<        EXPRESSION()(VARIABLE)
+<         VARIABLE()("variable")()
+---
+> 	Error: syntax error detected at line 1 with yytext: F
