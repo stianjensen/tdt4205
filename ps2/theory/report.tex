@@ -267,12 +267,21 @@ int main() {
 }
 \end{lstlisting}
 
-The end conclusion is that removing this in a regex creates a lot of problems and edge cases. We need to keep account of how many curly braces we have passed to know what scope we are in, and if we are in the while loop or not. This is not suited for a deterministic finite automaton. There is a part of perl regex matching that allows for recursive regex matching. There might be some parts of this that would help us, but it's not inside the scope of DFAs.
+The end conclusion is that removing this in a regex creates a lot of problems and edge cases. We need to keep account of how many curly braces we have passed to know what scope we are in, and if we are in the while loop or not.
 %----------------------------------------------------------------------------------------
 % PROBLEM 2
 %----------------------------------------------------------------------------------------
 
 \section{Grammars}
+
+\subsection{Part a}
+
+An ambiguous grammar, is a grammar for which there is a string that can have more than one leftmost derivation.
+
+\subsection{Part b}
+
+
+
 %----------------------------------------------------------------------------------------
 
 \end{document}
