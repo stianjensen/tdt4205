@@ -115,3 +115,5 @@ bin/
 
 # xindy
 *.xdy
+
+testOutput/
