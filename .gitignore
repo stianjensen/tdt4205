@@ -117,3 +117,7 @@ bin/
 *.xdy
 
 testOutput/
+*.zip
+
+work/
+obj/
