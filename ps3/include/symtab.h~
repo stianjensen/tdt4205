@@ -1,0 +1,32 @@
+#ifndef SYMTAB_H
+#define SYMTAB_H
+
+
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+
+typedef enum  {NO_TYPE=0, INT_TYPE, FLOAT_TYPE, BOOL_TYPE, STRING_TYPE, VOID_TYPE, CLASS_TYPE, DOUBLE_TYPE, ARRAY_TYPE}
+base_data_type_t;
+
+typedef struct data_type{
+	base_data_type_t base_type;
+	char* class_name;
+	int n_dimensions;
+	int* dimensions;
+	base_data_type_t array_type;
+} data_type_t;
+
+
+
+
+void symtab_init ( void );
+void symtab_finalize ( void );
+
+int strings_add ( char *str );
+void strings_output ( FILE *stream );
+
+
+
+
+#endif
