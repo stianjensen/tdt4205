@@ -11,24 +11,32 @@ static int strings_size = 16, strings_index = -1;
 
 void symtab_init ( void )
 {
-    
+    strings = malloc(sizeof(char*) * strings_size);
 }
 
 
 void symtab_finalize ( void )
 {
-    
+    free(strings);
+    strings = NULL;
+    strings_index = -1;
+    strings_size = 16;
 }
 
 
 int strings_add ( char *str )
 {
-
+    strings_index++;
 
     if(outputStage == 7)
         fprintf ( stderr, "Add strings (%s), index: %d \n", str, strings_index );
 
-    
+    if (strings_index == strings_size) {
+        strings_size *= 2;
+        strings = (char**)realloc(strings, strings_size * sizeof(char*));
+    }
+    strings[strings_index] = str;
+    return strings_index;
 }
 
 // Prints the data segment of the assembly code
