@@ -35,8 +35,8 @@ Node_t *simplify_function ( Node_t *root, int depth )
 {
 	if(outputStage == 4)
 		fprintf ( stderr, "%*cSimplify %s \n", depth, ' ', root->nodetype.text );
-    
-    Node_t **children = malloc(sizeof(node_t) * root->n_children);
+
+    Node_t **children = malloc(sizeof(node_t) * 2);
     int new_i = 0;
     for (int i=0; i < root->n_children; i++) {
         Node_t *node = root->children[i];
