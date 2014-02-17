@@ -179,8 +179,7 @@ Node_t *simplify_list ( Node_t *root, int depth )
             root->children[i] = node;
         }
         Node_t *node = root->children[0];
-        int new_size = 1 + node->n_children;
-        Node_t **children = malloc(sizeof(node_t*) * new_size); //TODO: Better number here
+        Node_t **children = malloc(sizeof(node_t*) * (1 + node->n_children));
         int new_i = 0;
         for (int i=0; i < node->n_children; i++) {
             if (node->children[i] != NULL) {
