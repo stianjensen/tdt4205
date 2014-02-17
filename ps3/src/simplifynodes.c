@@ -167,34 +167,31 @@ Node_t *simplify_list ( Node_t *root, int depth )
 {
 	if(outputStage == 4)
 		fprintf ( stderr, "%*cSimplify %s \n", depth, ' ', root->nodetype.text );
-		
-    Node_t **children = malloc(sizeof(node_t*) * 100); //TODO: Better number here
-    int new_i = 0;
-    for (int i=0; i < root->n_children; i++) {
-        Node_t *node = root->children[i];
-        if (node != NULL) {
+
+    if (root->n_children == 1) {
+        node_t *node = root->children[0];
+        node = node->simplify(node, depth+1);
+        root->children[0] = node;
+    } else {
+        for (int i=0; i < root->n_children; i++) {
+            Node_t *node = root->children[i];
             node = node->simplify(node, depth+1);
-            switch (node->nodetype.index) {
-                case STATEMENT_LIST:
-                case EXPRESSION_LIST:
-                case VARIABLE_LIST:
-                case CLASS_LIST:
-                {
-                    for (int j=0; j < node->n_children; j++) {
-                        if (node->children[j] != NULL) {
-                            children[new_i++] = node->children[j];
-                        }
-                    }
-                }
-                    break;
-                default:
-                    children[new_i++] = node;
+            root->children[i] = node;
+        }
+        Node_t *node = root->children[0];
+        int new_size = 1 + node->n_children;
+        Node_t **children = malloc(sizeof(node_t*) * new_size); //TODO: Better number here
+        int new_i = 0;
+        for (int i=0; i < node->n_children; i++) {
+            if (node->children[i] != NULL) {
+                children[new_i++] = node->children[i];
             }
         }
+        children[new_i++] = root->children[1];
+        free(root->children);
+        root->children = children;
+        root->n_children = new_i;
     }
-    free(root->children);
-    root->children = children;
-    root->n_children = new_i;
     return root;
 }
 
