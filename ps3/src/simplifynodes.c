@@ -124,8 +124,10 @@ Node_t *simplify_single_child ( Node_t *root, int depth )
         root->children[i] = (node != NULL) ? node->simplify(node, depth+1) : NULL;
     }
     if (root->n_children == 1) {
-        Node_t *yolo = root->children[0];
-        return yolo;
+        Node_t *node = root->children[0];
+        free(root->children);
+        free(root);
+        return node;
     } else {
         return root;
     }
