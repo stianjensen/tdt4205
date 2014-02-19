@@ -23,6 +23,7 @@ Node_t *simplify_types ( Node_t *root, int depth )
         Node_t *node = root->children[0];
         if (node != NULL) {
             root->data_type.class_name = STRDUP(node->label);
+            free(node);
             free(root->children);
             root->n_children = 0;
         }
@@ -44,7 +45,6 @@ Node_t *simplify_function ( Node_t *root, int depth )
             node = node->simplify(node, depth+1);
             if (node->nodetype.index == VARIABLE) {
                 root->label = STRDUP(node->label);
-                free(node->label);
                 free(node);
             } else if (node->nodetype.index == TYPE) {
                 root->data_type = node->data_type;
@@ -74,9 +74,9 @@ Node_t *simplify_class( Node_t *root, int depth )
         Node_t *node = root->children[i];
         if (node != NULL) {
             node = node->simplify(node, depth+1);
-
             if (node->nodetype.index == VARIABLE) {
                 root->label = STRDUP(node->label);
+                free(node);
             } else {
                 children[new_i++] = node;
             }
@@ -219,6 +219,8 @@ Node_t *simplify_expression ( Node_t *root, int depth )
             default:
                 {
                 Node_t *returnNode = root->children[0];
+                free(root->children);
+                free(root);
                 return returnNode;
                 }
         }
