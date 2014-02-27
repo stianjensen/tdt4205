@@ -48,7 +48,13 @@ int bind_class ( node_t *root, int stackOffset)
 	if(outputStage == 6)
 		fprintf(stderr, "CLASS: Start: %s\n", root->children[0]->label);
 
+    // Allocate memory for the entry
+    class_symbol_t* class_symbol = malloc(sizeof(class_symbol_t));
+    // Initialize the private tables
+    class_symbol->symbols = ght_create(8);
+    class_symbol->functions = ght_create(8);
 	
+
 
 	if(outputStage == 6)
 			fprintf(stderr, "CLASS: End\n");
