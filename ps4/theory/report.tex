@@ -203,6 +203,105 @@ Position 2
     \end{tabular}
 \end{table}
 
+\subsection{Part b)}
+
+\subsubsection{Position 1:}
+\begin{table}[ht!]
+    \center
+    \begin{tabular}{|l|l|l|}
+    \hline
+    Symbol name & Type           & Scope depth \\ \hline
+    main        & function, void & 0 \\ \hline
+    a        & int     & 1 \\ \hline
+    b        & float   & 1 \\ \hline
+    b        & bool    & 2 \\ \hline
+    \end{tabular}
+\end{table}
+
+\subsubsection{Position 2:}
+\begin{table}[ht!]
+    \center
+    \begin{tabular}{|l|l|l|}
+    \hline
+    Symbol name & Type           & Scope depth \\ \hline
+    main        & function, void & 0 \\ \hline
+    a        & int     & 1 \\ \hline
+    b        & float   & 1 \\ \hline
+    b        & int    & 2 \\ \hline
+    c        & float  & 2 \\ \hline
+    a        & bool   & 3 \\ \hline
+    c        & int    & 3 \\ \hline
+    \end{tabular}
+\end{table}
+
+\subsection{Part c)}
+
+With a single hash table, the lookup time for a symbol will always be O(1).
+
+With multiple symbol tables, however, it's easier to see which variables are defined in a particular scope. But it also means you may have to search through multiple hash tables to find the symbol you are looking for.
+
+\section{Type checking}
+
+\subsection{Part a)}
+Type synthesizing means obtaining the type of something by looking at the types of its subparts.
+For the example y = x + z, if x is an integer and z is a float, we know that y must be float.
+
+Type inference means finding the type of something by looking at how it's used.
+
+\subsection{Part b)}
+
+I assume that a double is twice the size of a float, and that an int and a float are the same size.
+
+\begin{table}[ht!]
+    \center
+    \begin{tabular}{|l|l|}
+    \hline
+    Data Type   & Widenes to data type \\ \hline
+    Integer & Integer, Float, Double, Complex integer, Complex float, Complex double \\
+    Float & Float, Double, Complex float, Complex double \\
+    Double & Double, Complex double \\
+    Complex integer & Complex integer, Complex float, Complex double \\
+    Complex float & Complex float, Complex double \\
+    Complex double & Complex double \\ \hline
+    \end{tabular}
+\end{table}
+
+\section{Types, SDDs}
+
+\subsection{Part a)}
+
+\begin{table}[ht!]
+    \center
+    \begin{tabular}{|l|l|}
+    \hline
+    Production   & Semantic rule   \\ \hline
+    T ::= int    & T.size = 4 \\
+    T ::= float  & T.size = 8 \\
+    T ::= bool   & T.size = 1 \\
+    T ::= T[num] & T.size = T.size * num \\
+    T ::= (L)    & T.size = L.size \\
+    L ::= L,T    & L.size = L.size + T.size \\
+    L ::= T      & L.size = T.size \\ \hline
+    \end{tabular}
+\end{table}
+
+\newpage
+\subsection{Part b)}
+
+\subsubsection{i}
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=90mm]{task_b_i.pdf}
+\end{figure}
+
+\newpage
+\subsubsection{ii}
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=90mm]{task_b_ii.pdf}
+\end{figure}
+
 
 %----------------------------------------------------------------------------------------
 
