@@ -53,9 +53,32 @@ int bind_class ( node_t *root, int stackOffset)
     // Initialize the private tables
     class_symbol->symbols = ght_create(8);
     class_symbol->functions = ght_create(8);
+    class_symbol->size = 0;
+    class_add(root->label, class_symbol);
+
+    thisClass = root->label;
 	
+    node_t *declaration_list = root->children[0];
+    if (declaration_list != NULL) {
+        class_symbol->size = declaration_list->n_children;
 
+        for (int i=0; i < declaration_list->n_children; i++) {
+            symbol_t *declaration_symbol = create_symbol(declaration_list->children[i], stackOffset);
+            class_insert_field(root->label, declaration_symbol->label, declaration_symbol);
+        }
+    }
 
+    node_t *function_list = root->children[1];
+    if (function_list != NULL) {
+        for (int i=0; i < function_list->n_children; i++) {
+            function_symbol_t *function_symbol = create_function_symbol(
+                function_list->children[i]
+            );
+            class_insert_method(root->label, function_symbol->label, function_symbol);
+        }
+        bind_children(function_list, stackOffset);
+    }
+    
 	if(outputStage == 6)
 			fprintf(stderr, "CLASS: End\n");
 
@@ -149,12 +172,73 @@ int bind_expression( node_t* root, int stackOffset)
 	if(outputStage == 6)
 		fprintf( stderr, "EXPRESSION: Start: %s\n", root->expression_type.text);
 
-    if (root->expression_type.index == FUNC_CALL_E) {
-        node_t *func_name_node = root->children[0];
-        function_symbol_t *function_symbol = function_get(func_name_node->label);
-        root->function_entry = function_symbol;
-    } else {
-        bind_children(root, stackOffset);
+    switch (root->expression_type.index) {
+        case FUNC_CALL_E:
+            {
+                node_t *func_name_node = root->children[0];
+                node_t *argument_list = root->children[1];
+                if (argument_list != NULL) {
+                    bind_children(argument_list, stackOffset);
+                }
+
+                function_symbol_t *function_symbol = function_get(func_name_node->label);
+                root->function_entry = function_symbol;
+            }
+            break;
+        case CLASS_FIELD_E:
+            {
+                node_t *class_name_node = root->children[0];
+                class_name_node->bind_names(class_name_node, stackOffset);
+
+                node_t *field_name_node = root->children[1];
+
+                symbol_t *symbol = class_get_symbol(
+                        class_name_node->entry->type.class_name,
+                        field_name_node->label
+                        );
+
+                field_name_node->entry = symbol;
+                root->entry = symbol;
+            }
+            break;
+        case METH_CALL_E:
+            {
+                node_t *class_name_node = root->children[0];
+                class_name_node->bind_names(class_name_node, stackOffset);
+
+                node_t *meth_name_node = root->children[1];
+
+                node_t *argument_list = root->children[2];
+                if (argument_list != NULL) {
+                    bind_children(argument_list, stackOffset);
+                }
+
+                function_symbol_t *function_symbol = class_get_method(
+                        class_name_node->entry->type.class_name,
+                        meth_name_node->label
+                        );
+
+                root->function_entry = function_symbol;
+            }
+            break;
+        case NEW_E:
+            {
+                node_t *class_name_node = root->children[0];
+                class_symbol_t *class_symbol = class_get(class_name_node->data_type.class_name);
+                root->class_entry = class_symbol;
+            }
+            break;
+        case THIS_E:
+            {
+                symbol_t *symbol = malloc(sizeof(symbol_t));
+                symbol->type = (data_type_t) {.base_type = CLASS_TYPE, .class_name = thisClass};
+                symbol->stack_offset = 8;
+
+                root->entry = symbol;
+            }
+            break;
+        default:
+            bind_children(root, stackOffset);
     }
 
 	if(outputStage == 6)
