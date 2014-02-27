@@ -79,11 +79,11 @@ int bind_function_list ( node_t *root, int stackOffset)
 	if(outputStage == 6)
 		fprintf ( stderr, "FUNCTION_LIST: Start\n");
 
+    scope_add();
     for (int i=0; i < root->n_children; i++) {
         // add function to func symbol table
         node_t *function_node = root->children[i];
         if (function_node != NULL) {
-            printf("bind function\n");
             function_symbol_t *function_symbol = create_function_symbol(function_node);
             function_add(function_node->label, function_symbol);
         }
@@ -91,6 +91,7 @@ int bind_function_list ( node_t *root, int stackOffset)
 
     bind_children(root, stackOffset);
 	
+    scope_remove();
 
 	if(outputStage == 6)
 		fprintf ( stderr, "FUNCTION_LIST: End\n");
@@ -143,7 +144,8 @@ int bind_expression( node_t* root, int stackOffset)
 		fprintf( stderr, "EXPRESSION: Start: %s\n", root->expression_type.text);
 
     if (root->expression_type.index == FUNC_CALL_E) {
-        function_symbol_t *function_symbol = function_get(root->label);
+        node_t *func_name_node = root->children[0];
+        function_symbol_t *function_symbol = function_get(func_name_node->label);
         root->function_entry = function_symbol;
     } else {
         bind_children(root, stackOffset);
