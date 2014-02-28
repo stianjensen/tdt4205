@@ -24,9 +24,9 @@ int bind_function ( node_t *root, int stackOffset)
         node_t *node = root->children[i];
         if (node != NULL) {
             if (node->nodetype.index == VARIABLE_LIST) {
-                bind_children(node, stackOffset + 8 + node->n_children * 4);
+                bind_children(node, stackOffset + 4 + node->n_children * 4);
             } else {
-                bind_children(node, 0);
+                bind_children(node, -4);
             }
         }
     }
@@ -36,7 +36,7 @@ int bind_function ( node_t *root, int stackOffset)
 	if(outputStage == 6)
 		fprintf ( stderr, "FUNCTION: End\n");
 
-    return 0;
+    return stackOffset;
 }
 
 int bind_declaration_list ( node_t *root, int stackOffset)
@@ -49,7 +49,7 @@ int bind_declaration_list ( node_t *root, int stackOffset)
 	if(outputStage == 6)
 		fprintf ( stderr, "DECLARATION_LIST: End\n");
 
-    return 0;
+    return stackOffset;
 }
 
 int bind_class ( node_t *root, int stackOffset)
@@ -95,7 +95,7 @@ int bind_class ( node_t *root, int stackOffset)
 	if(outputStage == 6)
 			fprintf(stderr, "CLASS: End\n");
 
-    return 0;
+    return stackOffset;
 }
 
 function_symbol_t* create_function_symbol(node_t* function_node)
@@ -137,7 +137,7 @@ int bind_function_list ( node_t *root, int stackOffset)
 	if(outputStage == 6)
 		fprintf ( stderr, "FUNCTION_LIST: End\n");
 
-    return 0;
+    return stackOffset;
 }
 
 int bind_constant ( node_t *root, int stackOffset)
@@ -165,7 +165,9 @@ int bind_declaration ( node_t *root, int stackOffset)
     symbol_t* symbol = create_symbol(root, stackOffset);
     symbol_insert(symbol->label, symbol);
 
-    return 0;
+    stackOffset -= 4;
+
+    return stackOffset;
 }
 
 int bind_variable ( node_t *root, int stackOffset)
@@ -176,7 +178,7 @@ int bind_variable ( node_t *root, int stackOffset)
     symbol_t *symbol = symbol_get(root->label);
     root->entry = symbol;
 
-    return 0;
+    return stackOffset;
 }
 
 int bind_expression( node_t* root, int stackOffset)
@@ -256,7 +258,7 @@ int bind_expression( node_t* root, int stackOffset)
 	if(outputStage == 6)
 		fprintf( stderr, "EXPRESSION: End\n");
 
-    return 0;
+    return stackOffset;
 }
 
 void bind_children( node_t* root, int stackOffset)
@@ -264,10 +266,7 @@ void bind_children( node_t* root, int stackOffset)
     for (int i=0; i < root->n_children; i++) {
         node_t *node = root->children[i];
         if (node != NULL) {
-            if (node->nodetype.index == DECLARATION_STATEMENT) {
-                stackOffset -= 4;
-            }
-            node->bind_names(node, stackOffset);
+            stackOffset = node->bind_names(node, stackOffset);
         }
     }
 }
