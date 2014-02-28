@@ -20,7 +20,8 @@ void type_error(node_t* root){
 
 int equal_types(data_type_t a, data_type_t b)
 {
-
+    // This can't be all?
+    return (a.base_type == b.base_type);
 }
 
 data_type_t typecheck_default(node_t* root)
@@ -38,7 +39,28 @@ data_type_t typecheck_expression(node_t* root)
 	toReturn = te(root);
 	
 	//Insert additional checking here
-	
+
+    if (root->expression_type.index == FUNC_CALL_E || root->expression_type.index == METH_CALL_E) {
+        function_symbol_t *function_symbol = root->function_entry;
+        node_t *argument_list = root->children[root->n_children-1];
+        if (argument_list != NULL) {
+            if (function_symbol->nArguments != argument_list->n_children) {
+                type_error(root);
+            }
+            for (int i=0; i < argument_list->n_children; i++) {
+                if (!equal_types(
+                            function_symbol->argument_types[i],
+                            argument_list->children[i]->data_type
+                            )) {
+                    type_error(root);
+                }
+            }
+        } else if (function_symbol->nArguments != 0) {
+            type_error(root);
+        }
+        toReturn = root->data_type;
+    }
+    return toReturn;
 }
 
 data_type_t typecheck_variable(node_t* root){
@@ -47,5 +69,11 @@ data_type_t typecheck_variable(node_t* root){
 
 data_type_t typecheck_assignment(node_t* root)
 {
+    data_type_t left  = root->children[0]->typecheck(root->children[0]);
+    data_type_t right = root->children[1]->typecheck(root->children[1]);
 
+    if (equal_types(left, right)) {
+        return left;
+    }   
+    type_error(root);
 }
