@@ -86,10 +86,12 @@ int bind_class ( node_t *root, int stackOffset)
             class_insert_method(root->label, function_symbol->label, function_symbol);
         }
 
+        scope_add();
         for (int i=0; i < function_list->n_children; i++) {
             node_t *function_node = function_list->children[i];
             function_node->bind_names(function_node, 4);
         }
+        scope_remove();
     }
     
 	if(outputStage == 6)
@@ -190,13 +192,14 @@ int bind_expression( node_t* root, int stackOffset)
         case FUNC_CALL_E:
             {
                 node_t *func_name_node = root->children[0];
+
+                function_symbol_t *function_symbol = function_get(func_name_node->label);
+                root->function_entry = function_symbol;
+
                 node_t *argument_list = root->children[1];
                 if (argument_list != NULL) {
                     bind_children(argument_list, stackOffset);
                 }
-
-                function_symbol_t *function_symbol = function_get(func_name_node->label);
-                root->function_entry = function_symbol;
             }
             break;
         case CLASS_FIELD_E:
@@ -222,17 +225,17 @@ int bind_expression( node_t* root, int stackOffset)
 
                 node_t *meth_name_node = root->children[1];
 
-                node_t *argument_list = root->children[2];
-                if (argument_list != NULL) {
-                    bind_children(argument_list, stackOffset);
-                }
-
                 function_symbol_t *function_symbol = class_get_method(
                         class_name_node->entry->type.class_name,
                         meth_name_node->label
                         );
 
                 root->function_entry = function_symbol;
+
+                node_t *argument_list = root->children[2];
+                if (argument_list != NULL) {
+                    bind_children(argument_list, stackOffset);
+                }
             }
             break;
         case NEW_E:
