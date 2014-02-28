@@ -1,0 +1,4 @@
+a.s: Assembler messages:
+a.s:1: Error: bad instruction `type error at:'
+a.s:2: Error: bad instruction `expression (FUNC_CALL)'
+a.s:3: Error: bad instruction `exiting'

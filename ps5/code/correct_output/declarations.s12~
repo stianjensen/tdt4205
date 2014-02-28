@@ -1,0 +1,2 @@
+a.s: Assembler messages:
+a.s:1: Error: bad instruction `symbol b not found'

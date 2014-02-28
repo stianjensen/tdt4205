@@ -1,0 +1,3 @@
+a.s: Assembler messages:
+a.s:15: Error: bad instruction `attempting to print something not int,float or bool'
+a.s:35: Error: ARM register expected -- `push {$.INTEGER}'
