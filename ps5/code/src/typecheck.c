@@ -20,7 +20,6 @@ void type_error(node_t* root){
 
 int equal_types(data_type_t a, data_type_t b)
 {
-    // This can't be all?
     return (a.base_type == b.base_type);
 }
 
@@ -58,7 +57,7 @@ data_type_t typecheck_expression(node_t* root)
         } else if (function_symbol->nArguments != 0) {
             type_error(root);
         }
-        toReturn = root->data_type;
+        toReturn = function_symbol->return_type;
     }
     return toReturn;
 }
