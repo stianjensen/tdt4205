@@ -118,6 +118,12 @@ void gen_PROGRAM ( node_t *root, int scopedepth)
 
 	/* TODO: Insert a call to the first defined function here */
 
+	int last_child = root->n_children - 1;
+
+	if (root->children[last_child] != NULL) {
+		char *func_label = root->children[last_child]->children[0]->function_entry->label;
+		instruction_add( CALL, STRDUP(func_label), NULL, 0, 0);
+    }
 
 	tracePrint("End PROGRAM\n");
 
@@ -135,13 +141,22 @@ void gen_FUNCTION ( node_t *root, int scopedepth )
 
 
     tracePrint ( "Starting FUNCTION (%s) with depth %d\n", root->label, scopedepth);
-    
-    
 
+    instruction_add(LABEL, STRDUP(root->function_entry->label), NULL, 0, 0);
+
+    instruction_add(PUSH, lr, NULL, 0, 0);
+    instruction_add(PUSH, fp, NULL, 0, 0);
+
+    instruction_add(MOVE, fp, sp, 0, 0);
+
+    gen_default(root, scopedepth);
+
+    instruction_add(MOVE, sp, fp, 0, 0);
+    instruction_add(POP, fp, NULL, 0, 0);
+    instruction_add(POP, "pc", NULL, 0, 0);
 
 	//Leaving the scope, decreasing depth
 	tracePrint ("Leaving FUNCTION (%s) with depth %d\n", root->label, scopedepth);
-    
 }
 
 
@@ -153,7 +168,10 @@ void gen_DECLARATION_STATEMENT (node_t *root, int scopedepth)
 {
 	tracePrint("Starting DECLARATION: adding space on stack\n");
 
-
+    if (root->entry->stack_offset < 0) {
+        instruction_add(MOVE, r1, "#0", 0, 0);
+        instruction_add(PUSH, r1, NULL, 0, 0);
+    }
 
 	tracePrint("Ending DECLARATION\n");
 }
@@ -258,42 +276,70 @@ void gen_EXPRESSION ( node_t *root, int scopedepth )
 
 void gen_VARIABLE ( node_t *root, int scopedepth )
 {
-	
-	tracePrint ( "Starting VARIABLE\n");
 
-	
+    tracePrint ( "Starting VARIABLE\n");
 
-	tracePrint ( "End VARIABLE %s, stack offset: %d\n", root->label, root->entry->stack_offset);
+    int stackOffset = root->entry->stack_offset;
+
+    instruction_add(LOAD, r1, fp, 0, stackOffset);
+    instruction_add(PUSH, r1, NULL, 0, 0);
+
+    tracePrint ( "End VARIABLE %s, stack offset: %d\n", root->label, root->entry->stack_offset);
 }
 
 void gen_CONSTANT (node_t * root, int scopedepth)
 {
-	tracePrint("Starting CONSTANT\n");
-	
+    tracePrint("Starting CONSTANT\n");
 
 
-	tracePrint("End CONSTANT\n");
+    switch (root->data_type.base_type) {
+        case INT_TYPE:
+            {
+            char temp[10];
+            int32_t t = (int32_t)root->int_const;
+            sprintf(temp, "$%d", t);
+            instruction_add(MOVE32, STRDUP(temp), r1, 0, 0);
+            }
+            break;
+        case STRING_TYPE:
+            {
+            }
+            break;
+        case BOOL_TYPE:
+            {
+            }
+            break;
+    }
+    instruction_add(PUSH, r1, NULL, 0, 0);
+
+    tracePrint("End CONSTANT\n");
 }
 
 void gen_ASSIGNMENT_STATEMENT ( node_t *root, int scopedepth )
 {
-	
-	 tracePrint ( "Starting ASSIGNMENT_STATEMENT\n");
+
+    tracePrint ( "Starting ASSIGNMENT_STATEMENT\n");
 
 
-	
-	
+    root->children[1]->generate(root->children[1], scopedepth);
 
-	tracePrint ( "End ASSIGNMENT_STATEMENT\n");
+    instruction_add(POP, r0, NULL, 0, 0);
+
+    instruction_add(STORE, r0, fp, 0, root->children[0]->entry->stack_offset);
+
+    tracePrint ( "End ASSIGNMENT_STATEMENT\n");
 }
 
 void gen_RETURN_STATEMENT ( node_t *root, int scopedepth )
 {
-	
-	tracePrint ( "Starting RETURN_STATEMENT\n");
-	
-	
-	tracePrint ( "End RETURN_STATEMENT\n");
+
+    tracePrint ( "Starting RETURN_STATEMENT\n");
+
+    root->children[0]->generate(root->children[0], scopedepth);
+
+    instruction_add(POP, r0, NULL, 0, 0);
+
+    tracePrint ( "End RETURN_STATEMENT\n");
 }
 
 
