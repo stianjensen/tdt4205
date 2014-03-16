@@ -257,7 +257,7 @@ void gen_EXPRESSION ( node_t *root, int scopedepth )
 		case FUNC_CALL_E:
 		
             {
-                if (root->children[1]->n_children > 0) {
+                if (root->children[1] != NULL) {
                     // push arguments on stack
                     gen_default(root->children[1], scopedepth);
                 }
