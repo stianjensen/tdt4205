@@ -256,7 +256,16 @@ void gen_EXPRESSION ( node_t *root, int scopedepth )
 
 		case FUNC_CALL_E:
 		
-	
+            {
+                if (root->children[1]->n_children > 0) {
+                    // push arguments on stack
+                    gen_default(root->children[1], scopedepth);
+                }
+                char *func_label = root->function_entry->label;
+                instruction_add(CALL, STRDUP(func_label), NULL, 0, 0);
+                instruction_add(PUSH, r0, NULL, 0, 0);
+            }
+            break;
 
 		default:
 			break;
@@ -295,18 +304,26 @@ void gen_CONSTANT (node_t * root, int scopedepth)
     switch (root->data_type.base_type) {
         case INT_TYPE:
             {
-            char temp[10];
-            int32_t t = (int32_t)root->int_const;
-            sprintf(temp, "$%d", t);
-            instruction_add(MOVE32, STRDUP(temp), r1, 0, 0);
+                char temp[10];
+                int32_t t = (int32_t)root->int_const;
+                sprintf(temp, "#%d", t);
+                instruction_add(MOVE32, STRDUP(temp), r1, 0, 0);
             }
             break;
         case STRING_TYPE:
             {
+                char temp[20];
+                int32_t t = (int32_t)root->string_index;
+                sprintf(temp, "#.STRING%d", t);
+                instruction_add(MOVE32, STRDUP(temp), r1, 0, 0);
             }
             break;
         case BOOL_TYPE:
             {
+                char temp[2];
+                int32_t t = (root->bool_const) ? 1 : 0;
+                sprintf(temp, "#%d", t);
+                instruction_add(MOVE, r1, STRDUP(temp), 0, 0);
             }
             break;
     }
