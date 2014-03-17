@@ -47,9 +47,13 @@ data_type_t typecheck_expression(node_t* root)
                 type_error(root);
             }
             for (int i=0; i < argument_list->n_children; i++) {
+                data_type_t param_type = argument_list->children[i]->data_type;
+                if (param_type.base_type == NO_TYPE) {
+                    param_type = argument_list->children[i]->typecheck(argument_list->children[i]);
+                }
                 if (!equal_types(
                             function_symbol->argument_types[i],
-                            argument_list->children[i]->data_type
+                            param_type
                             )) {
                     type_error(root);
                 }
