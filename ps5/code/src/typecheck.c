@@ -61,6 +61,11 @@ data_type_t typecheck_expression(node_t* root)
         } else if (function_symbol->nArguments != 0) {
             type_error(root);
         }
+
+        // Set return type on root node
+        // so it can be checked easily from print statements
+        root->data_type = root->function_entry->return_type;
+
         toReturn = function_symbol->return_type;
     }
     return toReturn;

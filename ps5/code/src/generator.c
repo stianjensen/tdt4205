@@ -264,9 +264,6 @@ void gen_EXPRESSION ( node_t *root, int scopedepth )
                 char *func_label = root->function_entry->label;
                 instruction_add(CALL, STRDUP(func_label), NULL, 0, 0);
                 if (root->function_entry->return_type.base_type != NO_TYPE) {
-                    // Set return type for print statements
-                    root->data_type = root->function_entry->return_type;
-
                     instruction_add(PUSH, r0, NULL, 0, 0);
                 }
             }
