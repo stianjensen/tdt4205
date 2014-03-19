@@ -82,6 +82,6 @@ data_type_t typecheck_assignment(node_t* root)
 
     if (equal_types(left, right)) {
         return left;
-    }   
+    }
     type_error(root);
 }
