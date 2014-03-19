@@ -116,7 +116,7 @@ void gen_PROGRAM ( node_t *root, int scopedepth)
 	TEXT_HEAD_ARM();
 	
 
-	/* TODO: Insert a call to the first defined function here */
+	/* Call the first defined function */
 
 	int last_child = root->n_children - 1;
 
@@ -158,11 +158,6 @@ void gen_FUNCTION ( node_t *root, int scopedepth )
 	//Leaving the scope, decreasing depth
 	tracePrint ("Leaving FUNCTION (%s) with depth %d\n", root->label, scopedepth);
 }
-
-
-
-
-
 
 void gen_DECLARATION_STATEMENT (node_t *root, int scopedepth)
 {
@@ -253,12 +248,10 @@ void gen_EXPRESSION ( node_t *root, int scopedepth )
 	tracePrint ( "Starting EXPRESSION of type %s\n", (char*) root->expression_type.text);
 
 	switch(root->expression_type.index){
-
 		case FUNC_CALL_E:
-		
             {
                 if (root->children[1] != NULL) {
-                    // push arguments on stack
+                    // Push arguments on stack
                     gen_default(root->children[1], scopedepth);
                 }
                 char *func_label = root->function_entry->label;
@@ -268,7 +261,6 @@ void gen_EXPRESSION ( node_t *root, int scopedepth )
                 }
             }
             break;
-
 		default:
             gen_default(root, scopedepth);
 			break;
@@ -276,15 +268,6 @@ void gen_EXPRESSION ( node_t *root, int scopedepth )
 
 	tracePrint ( "Ending EXPRESSION of type %s\n", (char*) root->expression_type.text);
 }
-
-
-
-
-
-
-
-
-
 
 void gen_VARIABLE ( node_t *root, int scopedepth )
 {
