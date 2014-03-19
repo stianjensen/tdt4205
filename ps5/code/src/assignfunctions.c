@@ -47,6 +47,9 @@ void assignFunctionsToNodes ( node_t *root )
 		case RETURN_STATEMENT: 
 			root->generate = gen_RETURN_STATEMENT;
 			break;
+        case WHILE_STATEMENT:
+            root->generate = gen_WHILE_STATEMENT;
+            break;
 		
 		
 		default:
