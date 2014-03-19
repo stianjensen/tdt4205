@@ -67,6 +67,10 @@ data_type_t typecheck_expression(node_t* root)
         root->data_type = root->function_entry->return_type;
 
         toReturn = function_symbol->return_type;
+    } else if (root->expression_type.index == CLASS_FIELD_E) {
+        data_type_t right = root->children[1]->typecheck(root->children[1]);
+        root->children[1]->data_type = right;
+        toReturn = right;
     }
     return toReturn;
 }
