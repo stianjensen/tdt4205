@@ -227,13 +227,121 @@ void gen_EXPRESSION ( node_t *root, int scopedepth )
 	 */
 	tracePrint ( "Starting EXPRESSION of type %s\n", (char*) root->expression_type.text);
 
-	switch(root->expression_type.index){
+	switch(root->expression_type.index) {
 
 	case FUNC_CALL_E:
 		ge(root,scopedepth);
 		break;
+    case METH_CALL_E:
+        {
+            if (root->children[2] != NULL) {
+                // Push arguments on stack
+                gen_default(root->children[2], scopedepth);
+            }
+            root->children[0]->generate(root->children[0], scopedepth);
+            char *func_label = root->function_entry->label;
+            instruction_add(CALL, STRDUP(func_label), NULL, 0, 0);
+            // There is an issue where, if the parent node does not use the returned result,
+            // this will pollute the stack, and offset any new local variables declared.
+            // I see no easy way to fix this, and it also doesn't seem to be covered by 
+            // the tests.
+            instruction_add(PUSH, r0, NULL, 0, 0);
+        }
+        break;
+    default:
+        gen_default(root, scopedepth);
+    }
 
-    /* Add cases for other expressions here */
+    switch (root->expression_type.index) {
+
+    case ADD_E:
+    case OR_E:
+        instruction_add(POP, r2, NULL, 0, 0);
+        instruction_add(POP, r1, NULL, 0, 0);
+        instruction_add3(ADD, r0, r1, r2);
+        instruction_add(PUSH, r0, NULL, 0, 0);
+        break;
+    case SUB_E:
+        instruction_add(POP, r2, NULL, 0, 0);
+        instruction_add(POP, r1, NULL, 0, 0);
+        instruction_add3(SUB, r0, r1, r2);
+        instruction_add(PUSH, r0, NULL, 0, 0);
+        break;
+    case MUL_E:
+    case AND_E:
+        instruction_add(POP, r2, NULL, 0, 0);
+        instruction_add(POP, r1, NULL, 0, 0);
+        instruction_add3(MUL, r0, r1, r2);
+        instruction_add(PUSH, r0, NULL, 0, 0);
+        break;
+    case DIV_E:
+        instruction_add(POP, r2, NULL, 0, 0);
+        instruction_add(POP, r1, NULL, 0, 0);
+        instruction_add3(DIV, r0, r1, r2);
+        instruction_add(PUSH, r0, NULL, 0, 0);
+        break;
+    case UMINUS_E:
+        instruction_add(MOVE, r1, STRDUP("#0"), 0, 0);
+        instruction_add(POP, r2, NULL, 0, 0);
+        instruction_add3(SUB, r0, r1, r2);
+        instruction_add(PUSH, r0, NULL, 0, 0);
+        break;
+    case EQUAL_E:
+        instruction_add(POP, r2, NULL, 0, 0);
+        instruction_add(POP, r1, NULL, 0, 0);
+        instruction_add(CMP, r1, r2, 0, 0);
+        instruction_add(MOVE, r0, STRDUP("#0"), 0, 0);
+        instruction_add(MOVEQ, r0, STRDUP("#1"), 0, 0);
+        instruction_add(PUSH, r0, NULL, 0, 0);
+        break;
+    case NEQUAL_E:
+        instruction_add(POP, r2, NULL, 0, 0);
+        instruction_add(POP, r1, NULL, 0, 0);
+        instruction_add(CMP, r1, r2, 0, 0);
+        instruction_add(MOVE, r0, STRDUP("#1"), 0, 0);
+        instruction_add(MOVEQ, r0, STRDUP("#0"), 0, 0);
+        instruction_add(PUSH, r0, NULL, 0, 0);
+        break;
+    case GEQUAL_E:
+        instruction_add(POP, r2, NULL, 0, 0);
+        instruction_add(POP, r1, NULL, 0, 0);
+        instruction_add(CMP, r1, r2, 0, 0);
+        instruction_add(MOVE, r0, STRDUP("#0"), 0, 0);
+        instruction_add(MOVGE, r0, STRDUP("#1"), 0, 0);
+        instruction_add(PUSH, r0, NULL, 0, 0);
+        break;
+    case LEQUAL_E:
+        instruction_add(POP, r2, NULL, 0, 0);
+        instruction_add(POP, r1, NULL, 0, 0);
+        instruction_add(CMP, r1, r2, 0, 0);
+        instruction_add(MOVE, r0, STRDUP("#0"), 0, 0);
+        instruction_add(MOVLE, r0, STRDUP("#1"), 0, 0);
+        instruction_add(PUSH, r0, NULL, 0, 0);
+        break;
+    case LESS_E:
+        instruction_add(POP, r2, NULL, 0, 0);
+        instruction_add(POP, r1, NULL, 0, 0);
+        instruction_add(CMP, r1, r2, 0, 0);
+        instruction_add(MOVE, r0, STRDUP("#0"), 0, 0);
+        instruction_add(MOVLT, r0, STRDUP("#1"), 0, 0);
+        instruction_add(PUSH, r0, NULL, 0, 0);
+        break;
+    case GREATER_E:
+        instruction_add(POP, r2, NULL, 0, 0);
+        instruction_add(POP, r1, NULL, 0, 0);
+        instruction_add(CMP, r1, r2, 0, 0);
+        instruction_add(MOVE, r0, STRDUP("#0"), 0, 0);
+        instruction_add(MOVGT, r0, STRDUP("#1"), 0, 0);
+        instruction_add(PUSH, r0, NULL, 0, 0);
+        break;
+    case NOT_E:
+        instruction_add(POP, r1, NULL, 0, 0);
+        instruction_add(CMP, r1, STRDUP("#0"), 0, 0);
+        instruction_add(MOVE, r0, STRDUP("#0"), 0, 0);
+        instruction_add(MOVEQ, r0, STRDUP("#1"), 0, 0);
+        instruction_add(PUSH, r0, NULL, 0, 0);
+        break;
+
 	}
 
 	tracePrint ( "Ending EXPRESSION of type %s\n", (char*) root->expression_type.text);
@@ -279,13 +387,54 @@ void gen_RETURN_STATEMENT ( node_t *root, int scopedepth )
 
 void gen_WHILE_STATEMENT ( node_t *root, int scopedepth )
 {
+    char start_label[20];
+    sprintf(start_label, "_while_%d", while_count);
+    char end_label[20];
+    sprintf(end_label, "_endwhile_%d", while_count);
+    while_count++;
 
+    instruction_add(LABEL, STRDUP(start_label+1), NULL, 0, 0);
+
+    root->children[0]->generate(root->children[0], scopedepth);
+    instruction_add(POP, r1, NULL, 0, 0);
+    instruction_add(MOVE, r2, STRDUP("#0"), 0, 0);
+    instruction_add(CMP, r1, r2, 0, 0);
+    instruction_add(JUMPEQ, STRDUP(end_label), NULL, 0, 0);
+
+    root->children[1]->generate(root->children[1], scopedepth);
+
+    instruction_add(JUMP, STRDUP(start_label), NULL, 0, 0);
+
+    instruction_add(LABEL, STRDUP(end_label+1), NULL, 0, 0);
 }
 
 
 void gen_IF_STATEMENT ( node_t *root, int scopedepth )
 {
+    char end_label[15];
+    sprintf(end_label, "_endif_%d", if_count);
+    char else_label[15];
+    sprintf(else_label, "_else_%d", if_count);
+    if_count++;
 
+    root->children[0]->generate(root->children[0], scopedepth);
+    instruction_add(POP, r1, NULL, 0, 0);
+    instruction_add(MOVE, r2, STRDUP("#0"), 0, 0);
+    instruction_add(CMP, r1, r2, 0, 0);
+
+    if (root->n_children == 3) {
+        instruction_add(JUMPEQ, STRDUP(else_label), NULL, 0, 0);
+        root->children[1]->generate(root->children[1], scopedepth);
+        instruction_add(JUMP, STRDUP(end_label), NULL, 0, 0);
+
+        instruction_add(LABEL, STRDUP(else_label+1), NULL, 0, 0);
+        root->children[2]->generate(root->children[2], scopedepth);
+    } else {
+        instruction_add(JUMPEQ, STRDUP(end_label), NULL, 0, 0);
+        root->children[1]->generate(root->children[1], scopedepth);
+    }
+
+    instruction_add(LABEL, STRDUP(end_label+1), NULL, 0, 0);
 }
 
 

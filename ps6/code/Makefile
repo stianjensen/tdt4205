@@ -66,6 +66,12 @@ work/%.c: src/%.c $(filter-out $(wildcard work), work)
 work/scanner.o: work/parser.h
 work/parser.h: work/parser.c
 
+.PHONY : ghettotest
+ghettotest: all
+	./bin/vslc < test.vsl 2> test.s
+	arm-linux-gnueabihf-gcc-4.6 -static test.s
+	qemu-arm ./a.out
+
 #
 # Cleanup.
 #
