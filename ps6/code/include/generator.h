@@ -89,6 +89,7 @@ typedef struct instr {
 	instruction_add ( SYSCALL, STRDUP("printf"), NULL, 0, 0 );\
 	instruction_add ( STRING,       STRDUP("\tpop {r0-r11, pc}"), NULL, 0, 0 );      \
 	instruction_add ( STRING,       STRDUP("_malloc:"), NULL, 0, 0 );      \
+    instruction_add ( PUSH,         lr, NULL, 0, 0); \
 	instruction_add ( LOAD,          r0, sp, 0, 4 );                     \
 	instruction_add ( SYSCALL, STRDUP("malloc"), NULL, 0, 0 );\
 	instruction_add ( STRING,       STRDUP("\tpop {pc}"), NULL, 0, 0 );      \

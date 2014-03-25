@@ -121,7 +121,9 @@ void gen_PROGRAM ( node_t *root, int scopedepth)
 
 void gen_CLASS (node_t *root, int scopedepth)
 {
-
+    currentClass = root->label;
+    gen_default(root->children[1], scopedepth);
+    currentClass = NULL;
 }
 
 void gen_FUNCTION ( node_t *root, int scopedepth )
@@ -129,9 +131,16 @@ void gen_FUNCTION ( node_t *root, int scopedepth )
     // Generating label. This may need to be changed to handle labels for methods
     function_symbol_t* entry = root->function_entry;
 	int len = strlen(entry->label);
-	char *temp = (char*) malloc(sizeof(char) * (len + 3));
+    if (currentClass != NULL) {
+        len += strlen(currentClass);
+    }
+	char *temp = (char*) malloc(sizeof(char) * (len + 4));
 	temp[0] = 0;
 	strcat(temp, "_");
+    if (currentClass != NULL) {
+        strcat(temp, currentClass);
+        strcat(temp, "_");
+    }
 	strcat(temp, entry->label);
 	strcat(temp, ":");
 
@@ -238,14 +247,53 @@ void gen_EXPRESSION ( node_t *root, int scopedepth )
                 // Push arguments on stack
                 gen_default(root->children[2], scopedepth);
             }
+            tracePrint( "Pushing THIS\n" );
             root->children[0]->generate(root->children[0], scopedepth);
+            char *class_label = root->children[0]->data_type.class_name;
             char *func_label = root->function_entry->label;
-            instruction_add(CALL, STRDUP(func_label), NULL, 0, 0);
+            int len = strlen(class_label) + strlen(func_label);
+            char *meth_label = malloc(sizeof(char) * (len+1));
+            meth_label[0] = 0;
+            strcat(meth_label, class_label);
+            strcat(meth_label, "_");
+            strcat(meth_label, func_label);
+            instruction_add(CALL, STRDUP(meth_label), NULL, 0, 0);
             // There is an issue where, if the parent node does not use the returned result,
             // this will pollute the stack, and offset any new local variables declared.
             // I see no easy way to fix this, and it also doesn't seem to be covered by 
             // the tests.
             instruction_add(PUSH, r0, NULL, 0, 0);
+        }
+        break;
+    case NEW_E:
+        {
+            class_symbol_t *class_entry = root->children[0]->class_entry;
+            char class_size[10];
+            int32_t class_entry_size = (int32_t)class_entry->size * 8;
+            sprintf(class_size, "#%d", class_entry_size);
+            instruction_add(MOVE32, STRDUP(class_size), r0, 0, 0);
+            instruction_add(PUSH, r0, NULL, 0, 0);
+            instruction_add(CALL, STRDUP("malloc"), NULL, 0, 0);
+            instruction_add(PUSH, r0, NULL, 0, 0);
+        }
+        break;
+    case CLASS_FIELD_E:
+        {
+            root->children[0]->generate(root->children[0], scopedepth);
+            char stack_offset[10];
+            sprintf(stack_offset, "#%d", root->entry->stack_offset);
+
+            instruction_add(POP, r1, NULL, 0, 0);
+            instruction_add(MOVE, r2, STRDUP(stack_offset), 0, 0);
+            instruction_add3(ADD, r3, r1, r2);
+            instruction_add(LOAD, r0, r3, 0, 0);
+            instruction_add(PUSH, r0, NULL, 0, 0);
+        }
+        break;
+    case THIS_E:
+        {
+            instruction_add(LOAD, r1, fp, 0, 8);
+            instruction_add(PUSH, r1, NULL, 0, 0);
         }
         break;
     default:
@@ -369,7 +417,14 @@ void gen_ASSIGNMENT_STATEMENT ( node_t *root, int scopedepth )
 
     // Left hand side may be a class field, which should be handled in this assignment
 	if(root->children[0]->expression_type.index == CLASS_FIELD_E){
-
+        root->children[0]->children[0]->generate(root->children[0]->children[0], scopedepth);
+        instruction_add(POP, r2, NULL, 0, 0);
+        char stack_offset[10];
+        sprintf(stack_offset, "#%d", root->children[0]->entry->stack_offset);
+        instruction_add(MOVE, r1, STRDUP(stack_offset), 0, 0);
+        instruction_add3(ADD, r0, r1, r2);
+        instruction_add(POP, r1, NULL, 0, 0);
+        instruction_add(STORE, r1, r0, 0, 0);
 	}
 	// or a variable, handled in previous assignment
 	else{
