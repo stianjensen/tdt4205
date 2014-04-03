@@ -1,0 +1,41 @@
+CLASS Simple HAS
+	INT a;
+	
+	WITH
+	
+	VOID FUNC construct(INT a) START
+		THIS.a := a;
+	END
+	
+END
+
+CLASS Wrapper HAS
+    Simple inner;
+
+    WITH
+
+    VOID FUNC construct(Simple inner) START
+        THIS.inner := inner;
+    END
+END
+
+VOID FUNC main() START
+	Simple s;
+	s := NEW Simple;
+	s.construct(3);
+	PRINT s.a;
+    Simple s2;
+    s2 := NEW Simple;
+    s2.construct(4);
+    Wrapper w;
+    w := NEW Wrapper;
+    w.construct(s2);
+    PRINT w.inner.a;
+    s2.a := 5;
+    PRINT w.inner.a;
+    PRINT s2.a;
+    w.inner.a := 6;
+    PRINT s2.a;
+END
+	
+
